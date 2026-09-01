@@ -1,20 +1,22 @@
 "use client"
-import { joinRoom, createRoom } from "@/lib/gameSocket";
+import { useGameSocket } from "@/context/GameSocketContext";
 import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { useState } from "react";
+
 
 const cardSuits = ["♠", "♥", "♣", "♦"];
 
 export default function Home() {
   const router = useRouter();
+  const { createGame, joinGame } = useGameSocket();
 
   const [name, setName] = useState("")
   const [joinCode, setJoinCode] = useState("");
   const [error, setError] = useState<string | null>(null)
 
   function checkUsername(){
-    const profanitySet = new Set<String>([])
+    const profanitySet = new Set<string>([])
     if(name.length < 3){
       return false
     }
@@ -24,44 +26,33 @@ export default function Home() {
     return true;
   }
 
-  function listenForResult(
-    socket: ReturnType<typeof joinRoom>,
-    roomCode: string
-  ){
-    if(!socket) return;
-
-    socket.addEventListener("message", (event) => {
-      const message = JSON.parse(event.data);
-
-      if(message.type === "joined"){
-        router.push(`/game/${roomCode}`
-        );
-      }
-      
-      if(message.type === "created"){
-        router.push(`/game/${roomCode}`);
-      }
-      
-      if(message.type === "error"){
-        setError(message.message);
-      }
-    })
-  }
-  const joinSubmit = () => {
+  const joinSubmit = async () => {
     if(!checkUsername()){
       setError("username too short");
       return;
     }
-    const socket = joinRoom(joinCode, name)
-    listenForResult(socket, joinCode);
+
+    try {
+      setError(null);
+      const roomCode = await joinGame(joinCode, name);
+      router.push(`/game/${roomCode}`);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not join room");
+    }
   }
-  const createSubmit = () => {
+  const createSubmit = async () => {
     if(!checkUsername()){
       setError("username too short");
       return;
     }
-    const {roomCode, socket} = createRoom(name);
-    listenForResult(socket, roomCode)
+
+    try {
+      setError(null);
+      const roomCode = await createGame(name);
+      router.push(`/game/${roomCode}`);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not create room");
+    }
   }
 
   return (
@@ -96,7 +87,7 @@ export default function Home() {
       <h1 className="relative z-10 font-henny-penny text-7xl font-bold text-white text-shadow-md">
         Euchre!
       </h1>
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-3">
         <div className="relative">
               <input
                 type="text"
@@ -124,7 +115,7 @@ export default function Home() {
             ♣
           </span>
         </button>
-        <div className="flex">
+        <div className="flex gap-2">
           <div className="relative">
             <input
               type="text"

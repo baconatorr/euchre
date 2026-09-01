@@ -6,6 +6,7 @@ import {
   Henny_Penny,
   Outfit,
 } from "next/font/google";
+import { GameSocketProvider } from "@/context/GameSocketContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,7 +47,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${bubblegumSans.variable} ${hennyPenny.variable} ${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <GameSocketProvider>{children}</GameSocketProvider>
+      </body>
     </html>
   );
 }
