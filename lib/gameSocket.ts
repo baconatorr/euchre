@@ -92,7 +92,7 @@ export type GameSocketMessage = {
   [key: string]: unknown;
 };
 
-const PARTYKIT_HOST = "localhost:1999";
+const PARTYKIT_HOST = process.env.NEXT_PUBLIC_PARTYKIT_HOST;
 const PLAYER_ID_STORAGE_KEY = "euchre.playerId";
 const PLAYER_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
