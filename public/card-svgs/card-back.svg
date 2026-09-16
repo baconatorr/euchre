@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns2="http://creativecommons.org/ns#" xmlns:ns4="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" viewBox="0 0 63 88" width="63" height="88"><title id="title3347">Vector Playing Cards - Playing Card Backs</title>
+  <metadata id="metadata22443">
+    <rdf:RDF>
+      <ns2:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Vector Playing Cards - Playing Card Backs</dc:title>
+        <ns2:license rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/" />
+        <dc:creator>
+          <ns2:Agent>
+            <dc:title>Chris Aguilar</dc:title>
+          </ns2:Agent>
+        </dc:creator>
+        <dc:rights>
+          <ns2:Agent>
+            <dc:title>Copyright 2011,2019</dc:title>
+          </ns2:Agent>
+        </dc:rights>
+        <dc:publisher>
+          <ns2:Agent>
+            <dc:title>Chris Aguilar</dc:title>
+          </ns2:Agent>
+        </dc:publisher>
+        <dc:identifier>52 Vector Poker Standard Playing Card Faces Version 3.0</dc:identifier>
+        <dc:description>Vector Playing Cards</dc:description>
+        <dc:contributor>
+          <ns2:Agent>
+            <dc:title>Chris Aguilar</dc:title>
+          </ns2:Agent>
+        </dc:contributor>
+        <dc:source>https://totalnonsense.com/open-source-vector-playing-cards/</dc:source>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>Playing Card Backs</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:language>English</dc:language>
+      </ns2:Work>
+      <ns2:License rdf:about="http://creativecommons.org/licenses/by-sa/4.0/">
+        <ns2:permits rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <ns2:permits rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <ns2:requires rdf:resource="http://creativecommons.org/ns#Notice" />
+        <ns2:requires rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <ns2:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <ns2:requires rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </ns2:License>
+    </rdf:RDF>
+  </metadata>
+  <g id="g12852">
+    <rect transform="translate(0,-209)" style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.165;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="rect12846" width="63" height="88" x="0" y="209" rx="3" ry="3" />
+    <rect ry="2.7272727" rx="2.6190476" y="4.0000014" x="4" height="80" width="55.000004" id="rect12848" style="fill:#800000;fill-opacity:1;stroke:none;stroke-width:0.146994;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path id="path12850" d="M 7.6708589,7.317421 C 17.117227,36.713832 25.28632,55.333195 31.5,65.692127 37.71368,55.333195 45.882773,36.713832 55.329141,7.317421 M 43.415274,8.6305452 C 38.730911,15.704658 34.777319,22.601018 31.5,29.117379 28.222681,22.601018 24.269089,15.704658 19.584726,8.6305452 M 7.6708589,80.682579 C 17.117227,51.286168 25.28632,32.666805 31.5,22.307873 37.71368,32.666805 45.882773,51.286168 55.329141,80.682579 M 43.415274,79.369455 C 38.730911,72.295342 34.777319,65.398982 31.5,58.882621 28.222681,65.398982 24.269089,72.295342 19.584726,79.369455" style="fill:none;stroke:#ffffff;stroke-width:0.965;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" ns4:connector-curvature="0" />
+  </g>
+  </svg>

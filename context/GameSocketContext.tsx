@@ -16,6 +16,7 @@ import {
   joinRoom as openJoinedRoom,
   parseGameSocketMessage,
   type GameSocketMessage,
+  type Suit,
 } from "@/lib/gameSocket";
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected";
@@ -27,6 +28,14 @@ type GameSocketContextValue = {
   createGame: (playerName: string) => Promise<string>;
   joinGame: (roomCode: string, playerName: string) => Promise<string>;
   send: (message: GameSocketMessage) => void;
+  startGame: () => void;
+  orderUp: (goingAlone?: boolean) => void;
+  pass: () => void;
+  callTrump: (suit: Suit, goingAlone?: boolean) => void;
+  discardCard: (cardId: string) => void;
+  playCard: (cardId: string) => void;
+  nextHand: () => void;
+  restartGame: () => void;
   disconnect: () => void;
 };
 
@@ -110,11 +119,13 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
   const createGame = useCallback(
     (playerName: string) => {
       const { roomCode: code, socket } = openCreatedRoom(playerName);
-
+  
       if (!socket) {
         return Promise.reject(new Error("Could not create socket"));
       }
-
+  
+      sessionStorage.setItem("playerName", playerName);
+  
       return attachSocket(socket, code, "created");
     },
     [attachSocket],
@@ -123,12 +134,15 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
   const joinGame = useCallback(
     (code: string, playerName: string) => {
       const normalizedCode = code.trim().toUpperCase();
+  
+      sessionStorage.setItem("playerName", playerName);
+  
       const socket = openJoinedRoom(normalizedCode, playerName);
-
+  
       if (!socket) {
         return Promise.reject(new Error("Could not create socket"));
       }
-
+  
       return attachSocket(socket, normalizedCode, "joined");
     },
     [attachSocket],
@@ -146,6 +160,53 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
+  
+  const startGame = useCallback(() => {
+    send({ type: "start_game" });
+  }, [send]);
+
+  const orderUp = useCallback(
+    (goingAlone = false) => {
+      send({ type: "order_up", goingAlone });
+    },
+    [send],
+  );
+
+  const pass = useCallback(() => {
+    send({ type: "pass" });
+  }, [send]);
+
+  const callTrump = useCallback(
+    (suit: Suit, goingAlone = false) => {
+      send({ type: "call_trump", suit, goingAlone });
+    },
+    [send],
+  );
+
+  const discardCard = useCallback(
+    (cardId: string) => {
+      send({ type: "discard_card", cardId });
+    },
+    [send],
+  );
+
+  const playCard = useCallback(
+    (cardId: string) => {
+      send({
+        type: "play_card",
+        cardId,
+      });
+    },
+    [send],
+  );
+
+  const nextHand = useCallback(() => {
+    send({ type: "next_hand" });
+  }, [send]);
+
+  const restartGame = useCallback(() => {
+    send({ type: "restart_game" });
+  }, [send]);
 
   useEffect(() => {
     return () => {
@@ -162,6 +223,14 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
         createGame,
         joinGame,
         send,
+        startGame,
+        orderUp,
+        pass,
+        callTrump,
+        discardCard,
+        playCard,
+        nextHand,
+        restartGame,
         disconnect,
       }}
     >

@@ -4,14 +4,15 @@ export default function GameLog({ messages }: { messages: string[] }) {
   }
 
   return (
-    <div
-      className="fixed bottom-4 right-4 z-50 max-h-48 w-[calc(100vw-2rem)] overflow-y-auto border border-green-900 bg-white/95 p-4 text-sm text-black shadow-lg sm:w-80"
+    <details
+      className="mx-auto mt-3 w-full max-w-4xl rounded-lg bg-black/15 text-xs text-white sm:text-sm"
     >
-      <div>
+      <summary className="cursor-pointer px-3 py-2 font-medium">Game log</summary>
+      <div className="max-h-32 space-y-1 overflow-y-auto break-words px-3 pb-3 sm:max-h-48">
         {messages.map((message, index) => (
           <p key={`${index}-${message}`}>{message}</p>
         ))}
       </div>
-    </div>
+    </details>
   );
 }

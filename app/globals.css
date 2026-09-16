@@ -28,3 +28,24 @@
       rotate(var(--suit-spin));
   }
 }
+
+@keyframes collect-trick {
+  0%, 70% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--trick-x), var(--trick-y)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+.animate-collect-trick {
+  animation: collect-trick 2s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-collect-trick {
+    animation: none;
+  }
+}

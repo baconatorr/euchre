@@ -1,19 +1,88 @@
 import PartySocket from "partysocket";
 
-import type { Card } from "@/lib/euchre";
-
 export type GamePlayer = {
   connId: string;
   uid: string;
   name: string;
-  seat: number;
+
+  seat: 0 | 1 | 2 | 3;
+  team: Team;
+
   hand: Card[];
+  handCount?: number;
 };
+
+export type Team = "blue" | "red";
 
 export type GameState = {
   players: GamePlayer[];
+
   phase: "lobby" | "playing" | "finished";
+
+  playingState:
+    | "selecting dealer"
+    | "dealing"
+    | "ordering suit"
+    | "playing cards"
+    | "collecting trick";
+
+  dealerSeat: number;
+  turnSeat: number;
+
+  roundNum: number;
+  biddingRound?: 1 | 2;
+
+  blueScore: number;
+  redScore: number;
+
+  trump: Suit | null;
+  upCard: Card | null;
+
+  makerTeam: Team | null;
+  trumpCallerSeat: number | null;
+
+  goingAlone: boolean;
+  aloneSeat: number | null;
+
+  trick: PlayedCard[];
+  lastTrick?: PlayedCard[];
+  lastTrickWinnerSeat?: number | null;
+  lastHandResult?: {
+    roundNum: number;
+    team: Team;
+    points: number;
+    blueTricks: number;
+    redTricks: number;
+  } | null;
+  blueTricks: number;
+  redTricks: number;
+
   messageHistory: string[];
+};
+
+export type Suit =
+  | "clubs"
+  | "diamonds"
+  | "hearts"
+  | "spades";
+
+export type Rank =
+  | "9"
+  | "10"
+  | "J"
+  | "Q"
+  | "K"
+  | "A";
+
+export type Card = {
+  id: string;
+  suit: Suit;
+  rank: Rank;
+};
+
+export type PlayedCard = {
+  playerSeat: number;
+  card: Card;
 };
 
 export type GameSocketMessage = {
@@ -117,11 +186,4 @@ export function joinRoom(roomCode: string, playerName: string){
   );
 
   return socket;
-}
-
-export function startGame(){
-
-}
-export function playCard(){
-
 }
