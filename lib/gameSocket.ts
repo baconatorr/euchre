@@ -151,7 +151,10 @@ export function connectToGame(roomCode: string, playerName: string, mode="join")
   try { 
     const playerId = getOrCreatePlayerId();
     const socket = new PartySocket({
-    host: PARTYKIT_HOST,
+      host:
+      window.location.port === "3000"
+        ? "localhost:1999"
+        : window.location.host,
     room: roomCode.toUpperCase(),
     query: {
       name: playerName,

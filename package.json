@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "share": "node scripts/share.mjs"
   },
   "dependencies": {
     "@number-flow/react": "^0.6.2",
@@ -22,6 +23,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "http-proxy": "^1.18.1",
     "partykit": "0.0.115",
     "tailwindcss": "^4",
     "typescript": "^5"
