@@ -1,0 +1,21 @@
+on_http_request:
+  - expressions:
+      - "req.method == 'OPTIONS'"
+    actions:
+      - type: custom-response
+        config:
+          status_code: 204
+          headers:
+            access-control-allow-origin: "*"
+            access-control-allow-methods: "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS"
+            access-control-allow-headers: "*"
+            access-control-max-age: "86400"
+
+on_http_response:
+  - actions:
+      - type: add-headers
+        config:
+          headers:
+            access-control-allow-origin: "*"
+            access-control-allow-methods: "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS"
+            access-control-allow-headers: "*"

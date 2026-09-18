@@ -92,7 +92,7 @@ export type GameSocketMessage = {
   [key: string]: unknown;
 };
 
-const PARTYKIT_HOST = process.env.NEXT_PUBLIC_PARTYKIT_HOST;
+const PARTYKIT_HOST = process.env.NEXT_PUBLIC_PARTYKIT_HOST || "localhost:1999";
 const PLAYER_ID_STORAGE_KEY = "euchre.playerId";
 const PLAYER_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -151,10 +151,7 @@ export function connectToGame(roomCode: string, playerName: string, mode="join")
   try { 
     const playerId = getOrCreatePlayerId();
     const socket = new PartySocket({
-      host:
-      window.location.port === "3000"
-        ? "localhost:1999"
-        : window.location.host,
+      host: PARTYKIT_HOST,
     room: roomCode.toUpperCase(),
     query: {
       name: playerName,
