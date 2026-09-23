@@ -424,7 +424,17 @@ export default function Page({
           <p>{messageHistory}</p>
         </details>
         {roundNum > 0 && (
-          <section className="mx-auto mb-3 px-4 py-2 text-green-950 sm:px-5 sm:py-3">
+          <section className="mx-auto mb-3 px-4 py-2 text-green-950 sm:px-5 sm:py-3 flex flex-col w-full justify-center items-center">
+            <div className="flex flex-col gap-3">
+              { trump != null && ( <>
+                <p  className="text-xl font-bold text-white">
+                  <span>Trump</span> is 
+                  <span className={(trump === "diamonds" || trump === "hearts") ? "text-red-500" : "text-black"}> {trump}</span>
+                </p>
+              <p  className={"text-xl font-bold text-white"}>
+                <span className={makerTeam == "red" ? "text-red-500" : "text-blue-500" + "text-xl"}>{makerTeam}</span> team ordered up</p>
+              </>)}
+            </div>
             <div className="flex items-center gap-x-3 gap-y-1 text-center tabular-nums sm:gap-x-4">
               <span className="text-left text-xs text-white">Tricks</span>
               <span className="text-xl font-bold text-blue-600">{blueTricks}</span>

@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "euchre-party",
+  "main": "party/index.ts",
+  "compatibility_date": "2026-08-28",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "Main",
+        "class_name": "Main"
+      }
+    ]
+  },
+  "exports": {
+    "Main": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  }
+}

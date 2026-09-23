@@ -1,4 +1,12 @@
-import type * as Party from "partykit/server";
+/// <reference types="@cloudflare/workers-types" />
+
+import {
+  Server,
+  routePartykitRequest,
+  type Connection,
+  type ConnectionContext,
+  type WSMessage,
+} from "partyserver";
 import type {
   Card,
   GamePlayer,
@@ -9,12 +17,14 @@ import type {
 const PLAYER_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export default class Server implements Party.Server {
-  constructor(readonly room: Party.Room){
-  }
+interface Env {
+  Main: DurableObjectNamespace<Main>;
+}
+
+export class Main extends Server<Env> {
 
   sendMessage(
-    conn: Party.Connection,
+    conn: Connection,
     payload: GameSocketMessage,
   ) {
     const game = payload.game;
@@ -36,7 +46,7 @@ export default class Server implements Party.Server {
   }
 
   async broadcastMessage(
-    sender: Party.Connection,
+    sender: Connection,
     senderInclusive: boolean,
     payload: GameSocketMessage & { game: GameState },
     persist = true,
@@ -46,10 +56,10 @@ export default class Server implements Party.Server {
     }
 
     if (persist) {
-      await this.room.storage.put("game", payload.game);
+      await this.ctx.storage.put("game", payload.game);
     }
 
-    for (const conn of this.room.getConnections()) {
+    for (const conn of this.getConnections()) {
       if (senderInclusive || conn.id !== sender.id) {
         this.sendMessage(conn, payload);
       }
@@ -57,8 +67,8 @@ export default class Server implements Party.Server {
   }
 
   async onConnect(
-    conn: Party.Connection,
-    ctx: Party.ConnectionContext
+    conn: Connection,
+    ctx: ConnectionContext
   ) {
     const url = new URL(ctx.request.url);
 
@@ -66,7 +76,7 @@ export default class Server implements Party.Server {
     const mode = url.searchParams.get("mode");
     const playerId = url.searchParams.get("playerId");
 
-    let game = await this.room.storage.get<GameState>("game");
+    let game = await this.ctx.storage.get<GameState>("game");
 
     if (mode !== "create" && mode !== "join") {
       this.sendMessage(
@@ -108,7 +118,7 @@ export default class Server implements Party.Server {
         `${existingPlayer.name} reconnected`,
       );
 
-      await this.room.storage.put("game", game);
+      await this.ctx.storage.put("game", game);
 
       this.sendMessage(
         conn,
@@ -227,7 +237,7 @@ export default class Server implements Party.Server {
 
   game.messageHistory.push(historyMessage);
 
-  await this.room.storage.put("game", game);
+  await this.ctx.storage.put("game", game);
 
   this.sendMessage(
     conn,
@@ -248,7 +258,7 @@ export default class Server implements Party.Server {
   );
   }
 
-  async onMessage(message: string, sender: Party.Connection){
+  async onMessage(sender: Connection, message: WSMessage){
     type RoundState = GameState & { biddingRound?: 1 | 2; passes?: number };
     const suits: Card["suit"][] = ["clubs", "diamonds", "hearts", "spades"];
     const ranks: Card["rank"][] = ["9", "10", "J", "Q", "K", "A"];
@@ -288,13 +298,16 @@ export default class Server implements Party.Server {
     try {
       let parsed: unknown;
       try {
+        if (typeof message !== "string") {
+          throw new Error("Binary messages are not supported");
+        }
         parsed = JSON.parse(message);
       } catch {
         throw new Error("Invalid JSON message");
       }
       const action = parsed as Record<string, unknown>;
 
-      const game = await this.room.storage.transaction(async (storage) => {
+      const game = await this.ctx.storage.transaction(async (storage) => {
         const game = (await storage.get<RoundState>("game"))!;
         const player = game.players.find(player => player.connId === sender.id)!;
         if (game.playingState === "collecting trick") {
@@ -462,7 +475,7 @@ export default class Server implements Party.Server {
       await this.broadcastMessage(sender, true, { type: "state", game }, false);
       if (game.playingState === "collecting trick") {
         await new Promise(resolve => setTimeout(resolve, 2000));
-        const nextGame = await this.room.storage.transaction(async (storage) => {
+        const nextGame = await this.ctx.storage.transaction(async (storage) => {
           const current = await storage.get<RoundState>("game");
           if (!current || current.playingState !== "collecting trick" || current.roundNum !== game.roundNum) return;
           current.trick = [];
@@ -483,7 +496,7 @@ export default class Server implements Party.Server {
         if (nextGame) await this.broadcastMessage(sender, true, { type: "state", game: nextGame }, false);
       }
     } catch (error) {
-      const game = await this.room.storage.get<GameState>("game");
+      const game = await this.ctx.storage.get<GameState>("game");
       this.sendMessage(sender, {
         type: "error",
         message: error instanceof Error ? error.message : "Could not process action",
@@ -492,3 +505,12 @@ export default class Server implements Party.Server {
     }
   }
 }
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    return (
+      (await routePartykitRequest(request, env)) ??
+      new Response("Not found", { status: 404 })
+    );
+  },
+} satisfies ExportedHandler<Env>;

@@ -31,6 +31,11 @@ export default function PlayerIcon({
             DEALER
           </div>
         )}
+        {!isDealer && (
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-white px-2 py-0.5 text-[8px] font-bold sm:text-[10px]  text-black shadow-md">
+          {name}
+        </div>
+        )}
       </div>
     </div>
   );
