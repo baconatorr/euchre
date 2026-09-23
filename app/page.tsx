@@ -2,10 +2,7 @@
 
 import { useGameSocket } from "@/context/GameSocketContext";
 import { useRouter } from "next/navigation";
-import type { CSSProperties } from "react";
 import { useState } from "react";
-
-const cardSuits = ["♠", "♥", "♣", "♦"];
 
 export default function Home() {
   const router = useRouter();
@@ -64,132 +61,134 @@ export default function Home() {
   };
 
   return (
-    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-green-600 px-4">
-      <div
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-      >
-        {Array.from({ length: 24 }, (_, index) => {
-          const suit = cardSuits[index % cardSuits.length];
+    <main className="app-shell min-h-svh overflow-hidden px-4 py-5 sm:px-7 sm:py-6">
+      <div className="mx-auto flex min-h-[calc(100svh-2.5rem)] w-full max-w-6xl flex-col sm:min-h-[calc(100svh-3rem)]">
+        <header className="flex items-center justify-between border-b border-white/8 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#81b64c] text-xl font-black text-white shadow-[0_3px_0_#5d8735]">
+              E
+            </div>
+            <div>
+              <p className="font-henny-penny text-2xl leading-none text-white">Euchre</p>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#9d9b98]">Private tables</p>
+            </div>
+          </div>
+          <div className="hidden items-center gap-2 text-sm text-[#b7b5b2] sm:flex">
+            <span className="h-2 w-2 rounded-full bg-[#81b64c] shadow-[0_0_10px_rgba(129,182,76,.7)]" />
+            No account needed
+          </div>
+        </header>
 
-          const style = {
-            left: `${(index * 37 + 7) % 101}%`,
-            fontSize: `${1.7 + (index % 5) * 0.55}rem`,
-            animationDelay: `${-(index * 1.45)}s`,
-            animationDuration: `${9 + (index % 7) * 1.35}s`,
-            "--suit-drift": `${((index % 3) - 1) * 70}px`,
-            "--suit-spin": `${index % 2 === 0 ? 360 : -360}deg`,
-          } as CSSProperties;
+        <section className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:py-14">
+          <div className="mx-auto w-full max-w-xl lg:mx-0">
+            <div className="mb-5 flex items-center gap-2 text-lg font-bold tracking-[0.35em]" aria-hidden="true">
+              <span className="text-[#d8d7d5]">♠</span>
+              <span className="text-[#e06c64]">♥</span>
+              <span className="text-[#d8d7d5]">♣</span>
+              <span className="text-[#e06c64]">♦</span>
+            </div>
+            <h1 className="max-w-lg text-balance text-5xl font-black leading-[0.98] tracking-[-0.045em] text-[#f1f1ef] sm:text-6xl lg:text-7xl">
+              The table&apos;s ready.
+              <span className="block text-[#81b64c]">Deal one more.</span>
+            </h1>
+            <p className="mt-6 max-w-md text-pretty text-base leading-7 text-[#b7b5b2] sm:text-lg">
+              Open a private room, send your friends the code, and get straight to the cards.
+            </p>
 
-          return (
-            <span
-              key={index}
-              style={style}
-              className={`absolute top-[-15vh] animate-suit-fall leading-none opacity-0
-                [text-shadow:0_2px_2px_rgb(0_0_0_/_12%)]
-                will-change-[transform,opacity]
-                motion-reduce:translate-y-[50vh]
-                motion-reduce:animate-none
-                motion-reduce:opacity-100
-                ${
-                  suit === "♥" || suit === "♦"
-                    ? "text-red-900/60"
-                    : "text-green-950/45"
-                }
-              `}
-            >
-              {suit}
-            </span>
-          );
-        })}
+            <div className="relative mt-10 hidden h-64 max-w-xl lg:block" aria-hidden="true">
+              <div className="game-table absolute inset-x-2 inset-y-3 rounded-[4.5rem]">
+                <div className="absolute inset-0 grid place-items-center">
+                  <div className="flex -space-x-5 -rotate-2">
+                    {["J", "Q", "K", "A"].map((rank, index) => (
+                      <div
+                        key={rank}
+                        className={`grid h-28 w-20 place-items-center rounded-lg border-2 border-[#dedbd2] bg-[#f5f3eb] text-3xl font-black shadow-xl ${index % 2 ? "text-[#b94843]" : "text-[#292725]"}`}
+                        style={{ transform: `rotate(${(index - 1.5) * 6}deg) translateY(${Math.abs(index - 1.5) * 5}px)` }}
+                      >
+                        {rank}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {["top-[-14px] left-1/2 -translate-x-1/2", "right-[-14px] top-1/2 -translate-y-1/2", "bottom-[-14px] left-1/2 -translate-x-1/2", "left-[-14px] top-1/2 -translate-y-1/2"].map((position, index) => (
+                  <span key={position} className={`absolute ${position} grid h-10 w-10 place-items-center rounded-full border-2 border-[#676461] bg-[#3a3836] text-xs font-bold shadow-lg`}>
+                    {index + 1}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <section className="surface-panel mx-auto w-full max-w-md rounded-2xl p-5 sm:p-7" aria-labelledby="seat-heading">
+            <div className="mb-6">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#81b64c]">Play with friends</p>
+              <h2 id="seat-heading" className="mt-2 text-3xl font-bold tracking-tight text-white">Take a seat</h2>
+              <p className="mt-1 text-sm text-[#9d9b98]">Choose a table name your friends will recognize.</p>
+            </div>
+
+            <div className="flex flex-col gap-5">
+              <label className="flex flex-col gap-2 text-sm font-semibold text-[#d8d7d5]">
+                Your name
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Enter at least 3 characters"
+                  autoComplete="nickname"
+                  className="min-h-13 w-full rounded-lg border border-white/10 bg-[#262522] px-4 text-base text-white shadow-inner outline-none placeholder:text-[#777471] focus:border-[#81b64c]"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={createSubmit}
+                className="primary-action min-h-13 rounded-lg px-5 text-base font-extrabold"
+              >
+                Create a private table
+              </button>
+
+              <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#777471]">
+                <span className="h-px flex-1 bg-white/8" />
+                or join one
+                <span className="h-px flex-1 bg-white/8" />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <label className="flex flex-col gap-2 text-sm font-semibold text-[#d8d7d5]">
+                  Room code
+                  <input
+                    type="text"
+                    value={joinCode}
+                    onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
+                    placeholder="ABCDE"
+                    maxLength={5}
+                    autoComplete="off"
+                    className="min-h-13 w-full rounded-lg border border-white/10 bg-[#262522] px-4 text-base font-bold uppercase tracking-[0.18em] text-white shadow-inner outline-none placeholder:tracking-[0.18em] placeholder:text-[#777471] focus:border-[#81b64c]"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={joinSubmit}
+                  className="min-h-13 self-end rounded-lg border border-white/10 bg-[#454341] px-5 font-bold text-white shadow-[0_3px_0_#242321] hover:bg-[#504e4b]"
+                >
+                  Join table
+                </button>
+              </div>
+
+              {error && (
+                <div role="alert" className="rounded-lg border border-[#e06c64]/30 bg-[#4b2928] px-4 py-3 text-sm font-medium text-[#ffc2bc]">
+                  {error}
+                </div>
+              )}
+            </div>
+          </section>
+        </section>
+
+        <footer className="flex items-center justify-between border-t border-white/8 pt-4 text-xs text-[#777471]">
+          <span>Four players. Two teams.</span>
+          <span className="font-bold tracking-[0.22em]">♣ EUCHRE ♦</span>
+        </footer>
       </div>
-
-      <section className="relative z-10 w-full max-w-md rounded-3xl  sm:p-9">
-        <div className="mb-8 text-center">
-          <div className="mb-2 text-3xl">
-            <span className="text-white">♠</span>
-            <span className="text-red-300"> ♥ </span>
-            <span className="text-white">♣</span>
-            <span className="text-red-300"> ♦</span>
-          </div>
-
-          <h1 className="font-henny-penny text-6xl font-bold text-white drop-shadow-lg sm:text-7xl">
-            Euchre!
-          </h1>
-
-          <p className="mt-2 text-sm font-medium text-green-50/80">
-            Create a table or join your friends.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5">
-
-            <div className="relative">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter username"
-                className="w-full rounded-xl border border-white/20 bg-white px-4 py-3 pr-11 text-black shadow-sm outline-none placeholder:text-gray-400 focus:border-white focus:ring-4 focus:ring-white/20"
-              />
-
-              <span
-                className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xl text-red-700"
-              >
-                ♥
-              </span>
-            </div>
-          </label>
-
-          <button
-            type="button"
-            onClick={createSubmit}
-            className="relative rounded-xl bg-white px-5 py-3 font-bold text-green-900 shadow-lg"
-          >
-            Create Game
-
-            <span
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-xl"
-            >
-              ♣
-            </span>
-          </button>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                placeholder="Join code"
-                className="w-full rounded-xl border border-white/20 bg-white px-4 py-3 pr-11 font-semibold uppercase text-black shadow-sm outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-gray-400 focus:border-white focus:ring-4 focus:ring-white/20"
-              />
-
-              <span
-                className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xl text-red-700"
-              >
-                ♦
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={joinSubmit}
-              className="rounded-xl bg-green-950/80 px-5 py-3 font-bold text-white shadow-lg"
-            >
-              Join Game
-            </button>
-          </div>
-
-          {error && (
-            <div
-              className="rounded-xl border border-red-200/40 bg-red-950/40 px-4 py-3 text-sm font-medium text-red-50"
-            >
-              {error}
-            </div>
-          )}
-        </div>
-      </section>
     </main>
   );
 }
