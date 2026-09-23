@@ -3,7 +3,7 @@
 import { useGameSocket } from "@/context/GameSocketContext";
 import type { Card, GameState, Suit } from "@/lib/gameSocket";
 import { use, useEffect, useRef, useState, type CSSProperties } from "react";
-import PlayerIcon from "../../../components/PlayerIcon"
+import PlayerIcon from "../../../components/PlayerIcon";
 import PlayingCard from "@/components/PlayingCard";
 
 function destructureGameState(game?: Partial<GameState>): {
@@ -345,6 +345,8 @@ export default function Page({
                     name={player.name}
                     seat={player.seat}
                     isDealer={roundNum > 0 && player.seat === dealerSeat}
+                    isActive={roundNum > 0 && player.seat === turnSeat}
+                    isCurrent={player.seat === currentPlayer?.seat}
                   />
                 ))}
             </div>
@@ -358,6 +360,8 @@ export default function Page({
                     name={player.name}
                     seat={player.seat}
                     isDealer={roundNum > 0 && player.seat === dealerSeat}
+                    isActive={roundNum > 0 && player.seat === turnSeat}
+                    isCurrent={player.seat === currentPlayer?.seat}
                   />
                 ))}
             </div>
@@ -371,6 +375,8 @@ export default function Page({
                     name={player.name}
                     seat={player.seat}
                     isDealer={roundNum > 0 && player.seat === dealerSeat}
+                    isActive={roundNum > 0 && player.seat === turnSeat}
+                    isCurrent={player.seat === currentPlayer?.seat}
                   />
                 ))}
             </div>
@@ -384,6 +390,8 @@ export default function Page({
                     name={player.name}
                     seat={player.seat}
                     isDealer={roundNum > 0 && player.seat === dealerSeat}
+                    isActive={roundNum > 0 && player.seat === turnSeat}
+                    isCurrent={player.seat === currentPlayer?.seat}
                   />
                 ))}
             </div>
@@ -528,6 +536,8 @@ export default function Page({
                         name={player.name}
                         seat={player.seat}
                         isDealer={roundNum > 0 && player.seat === dealerSeat}
+                        isActive={player.seat === turnSeat}
+                        isCurrent={player.seat === currentPlayer?.seat}
                       />
                     </div>
                     {roundNum > 0 && (
@@ -565,6 +575,8 @@ export default function Page({
                         name={player.name}
                         seat={player.seat}
                         isDealer={roundNum > 0 && player.seat === dealerSeat}
+                        isActive={player.seat === turnSeat}
+                        isCurrent={player.seat === currentPlayer?.seat}
                       />
                     </div>
                     {roundNum > 0 && (
@@ -603,6 +615,8 @@ export default function Page({
                         name={player.name}
                         seat={player.seat}
                         isDealer={roundNum > 0 && player.seat === dealerSeat}
+                        isActive={player.seat === turnSeat}
+                        isCurrent={player.seat === currentPlayer?.seat}
                       />
                     </div>
                     {roundNum > 0 && (
@@ -640,6 +654,8 @@ export default function Page({
                         name={player.name}
                         seat={player.seat}
                         isDealer={roundNum > 0 && player.seat === dealerSeat}
+                        isActive={player.seat === turnSeat}
+                        isCurrent={player.seat === currentPlayer?.seat}
                       />
                     </div>
                     {roundNum > 0 && (

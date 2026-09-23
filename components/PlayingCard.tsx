@@ -30,7 +30,7 @@ export default function PlayingCard({ card, compact = false }: { card?: Card; co
       height={88}
       unoptimized
       draggable={false}
-      className={`h-auto shrink-0 rounded-md shadow-md ${compact ? "w-7 sm:w-9 lg:w-10" : "w-11 sm:w-14 lg:w-16"}`}
+      className={`h-auto shrink-0 rounded-[7px] border border-black/15 bg-[#f5f3eb] shadow-[0_5px_12px_rgba(0,0,0,.3)] ${compact ? "w-7 sm:w-9 lg:w-10" : "w-11 sm:w-14 lg:w-16"}`}
     />
   );
 }
