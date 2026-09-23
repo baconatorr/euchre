@@ -2,6 +2,8 @@
 
 import { useGameSocket } from "@/context/GameSocketContext";
 import type { Card, GameState, Suit } from "@/lib/gameSocket";
+import GameLog from "@/components/GameLog";
+import Link from "next/link";
 import { use, useEffect, useRef, useState, type CSSProperties } from "react";
 import PlayerIcon from "../../../components/PlayerIcon";
 import PlayingCard from "@/components/PlayingCard";
@@ -18,7 +20,6 @@ function destructureGameState(game?: Partial<GameState>): {
   trump: GameState["trump"];
   upCard: GameState["upCard"];
   makerTeam: GameState["makerTeam"];
-  trumpCallerSeat: number | null;
   goingAlone: boolean;
   aloneSeat: number | null;
   trick: GameState["trick"];
@@ -38,7 +39,6 @@ function destructureGameState(game?: Partial<GameState>): {
     trump = null,
     upCard = null,
     makerTeam = null,
-    trumpCallerSeat = null,
     goingAlone = false,
     aloneSeat = null,
     trick = [],
@@ -59,7 +59,6 @@ function destructureGameState(game?: Partial<GameState>): {
     trump,
     upCard,
     makerTeam,
-    trumpCallerSeat,
     goingAlone,
     aloneSeat,
     trick,
@@ -128,7 +127,6 @@ export default function Page({
     trump,
     upCard,
     makerTeam,
-    trumpCallerSeat,
     goingAlone,
     aloneSeat,
     trick,
@@ -148,6 +146,24 @@ export default function Page({
   const isStarting = startRequest !== null && startRequest.message === lastMessage;
   const canStart = currentPlayer?.seat === 0 && players.length === 4 && status === "connected";
 
+  const gameHeader = (
+    <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-3 sm:pb-4">
+      <div className="flex items-center gap-3">
+        <Link href="/" aria-label="Back to home" className="grid h-9 w-9 place-items-center rounded-lg bg-[#81b64c] font-black text-white shadow-[0_3px_0_#5d8735] hover:bg-[#8fc357]">
+          E
+        </Link>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9d9b98]">Private table</p>
+          <h1 className="text-lg font-extrabold tracking-wide text-white sm:text-xl">Room {roomCode}</h1>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 rounded-lg border border-white/8 bg-[#312e2b] px-3 py-2 text-xs font-semibold text-[#d8d7d5]">
+        <span className={`h-2 w-2 rounded-full ${isCurrentRoom && status === "connected" ? "bg-[#81b64c] shadow-[0_0_8px_rgba(129,182,76,.75)]" : "bg-[#e06c64]"}`} />
+        {isCurrentRoom && status === "connected" ? "Live table" : "Reconnecting"}
+      </div>
+    </header>
+  );
+
   const handleStartGame = () => {
     if (!canStart || isStarting) return;
 
@@ -161,22 +177,25 @@ export default function Page({
   };
 
   const startControls = roundNum === 0 && playingState === "selecting dealer" ? (
-    <div className="flex flex-col items-center gap-3 px-4 text-center">
+    <div className="flex max-w-sm flex-col items-center gap-3 px-4 text-center">
       {players.length < 4 ? (
-        <p className="text-sm">Waiting for players ({players.length}/4)</p>
+        <>
+          <p className="text-lg font-bold text-white">Waiting for the table</p>
+          <p className="text-sm text-[#d4dfcf]">{players.length} of 4 players have joined</p>
+        </>
       ) : currentPlayer?.seat === 0 ? (
         <button
           type="button"
           onClick={handleStartGame}
           disabled={!canStart || isStarting}
-          className="rounded-xl bg-white px-6 py-3 font-bold text-green-900 shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+          className="primary-action min-h-12 rounded-lg px-7 py-3 font-extrabold disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isStarting ? "Starting..." : "Start Game"}
+          {isStarting ? "Starting…" : "Start game"}
         </button>
       ) : (
-        <p className="text-sm">Waiting for the room creator to start the game.</p>
+        <p className="text-sm text-[#d4dfcf]">The table is full. Waiting for the host to deal.</p>
       )}
-      {status !== "connected" && <p className="text-sm">Waiting for connection...</p>}
+      {status !== "connected" && <p className="text-sm text-[#f0c95a]">Reconnecting…</p>}
       {(startError || lastMessage?.type === "error") && (
         <p className="text-sm text-red-200">
           {startError ?? lastMessage?.message ?? "Could not start game"}
@@ -239,8 +258,8 @@ export default function Page({
   } as CSSProperties;
 
   const biddingControls = isOrdering ? (
-    <section className="flex w-full min-w-0 flex-col items-center gap-2 rounded-xl border border-white/10 bg-green-950/90 p-3 text-center text-sm shadow-lg sm:gap-3">
-      <p className="max-w-full break-words font-medium">
+    <section className="surface-panel flex w-full min-w-0 flex-col items-center gap-3 rounded-xl p-4 text-center text-sm sm:p-5">
+      <p className="max-w-full break-words font-semibold text-[#f1f1ef]">
         {waitingForDiscard
           ? currentPlayer?.seat === dealerSeat
             ? "Choose one card from your hand to discard."
@@ -257,7 +276,7 @@ export default function Page({
                 type="button"
                 disabled={!canBid}
                 onClick={() => { if (canBid && upCard) sendGameAction(() => orderUp(bidAlone)); }}
-                className="min-h-11 rounded-lg bg-white px-3 py-2 text-sm font-bold text-green-950 sm:px-4 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                className="primary-action min-h-11 rounded-lg px-3 py-2 text-sm font-bold sm:px-4 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Order Up{upCard ? ` ${suitLabels[upCard.suit]}` : ""}
               </button>
@@ -268,7 +287,7 @@ export default function Page({
                   type="button"
                   disabled={!canBid}
                   onClick={() => { if (canBid) sendGameAction(() => callTrump(suit, bidAlone)); }}
-                  className="min-h-11 rounded-lg bg-white px-3 py-2 text-sm font-bold text-green-950 sm:px-4 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                  className="min-h-11 rounded-lg border border-white/10 bg-[#454341] px-3 py-2 text-sm font-bold text-white hover:bg-[#504e4b] sm:px-4 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {suitLabels[suit]}
                 </button>
@@ -278,19 +297,19 @@ export default function Page({
               type="button"
               disabled={!canBid || (currentPlayer?.seat === dealerSeat && biddingRound != 1)}
               onClick={() => { if (canBid) sendGameAction(pass); }}
-              className="min-h-11 rounded-lg bg-white px-3 py-2 text-sm font-bold text-green-950 sm:px-4 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+              className="min-h-11 rounded-lg border border-white/10 bg-[#454341] px-3 py-2 text-sm font-bold text-white hover:bg-[#504e4b] sm:px-4 disabled:cursor-not-allowed disabled:opacity-45"
             >
               Pass
             </button>
           </div>
-          <label className={`flex min-h-9 items-center gap-2 text-sm ${!canBid ? "text-gray-300" : ""}`}>
-            <input type="checkbox" className="h-4 w-4" checked={bidAlone} disabled={!canBid} onChange={event => setBidAlone(event.target.checked)} />
+          <label className={`flex min-h-9 items-center gap-2 text-sm text-[#d8d7d5] ${!canBid ? "opacity-45" : ""}`}>
+            <input type="checkbox" className="h-4 w-4 accent-[#81b64c]" checked={bidAlone} disabled={!canBid} onChange={event => setBidAlone(event.target.checked)} />
             Go alone
           </label>
         </>
       )}
-      {actionPending && <p className="text-sm">Sending...</p>}
-      {status !== "connected" && <p className="text-sm">Waiting for connection...</p>}
+      {actionPending && <p className="text-sm text-[#b7b5b2]">Sending…</p>}
+      {status !== "connected" && <p className="text-sm text-[#f0c95a]">Reconnecting…</p>}
       {(actionError || lastMessage?.type === "error") && (
         <p className="text-sm text-red-200">{actionError ?? lastMessage?.message ?? "Could not send action"}</p>
       )}
@@ -299,38 +318,35 @@ export default function Page({
 
   if (!phase) {
     return (
-      <main className="flex min-h-svh items-center justify-center bg-green-600 text-white">
-        <p>Loading game...</p>
+      <main className="app-shell flex min-h-svh items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-4">
+          <span className="h-10 w-10 animate-spin rounded-full border-4 border-white/15 border-t-[#81b64c]" />
+          <p className="font-semibold text-[#b7b5b2]">Pulling up your chair…</p>
+        </div>
       </main>
     );
   }
 
   if (phase === "lobby") {
     return (
-      <main className="flex min-h-svh flex-col bg-green-600 px-3 py-3 text-white sm:px-5 sm:py-4 lg:px-8">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-4">
-          <h1 className="text-xl font-bold sm:text-2xl">
-            Room: {roomCode}
-          </h1>
-
-          <p className="text-sm">
-            Connection: {isCurrentRoom ? status : "disconnected"}
-          </p>
-        </div>
+      <main className="app-shell flex min-h-svh flex-col px-3 py-3 text-white sm:px-5 sm:py-4 lg:px-8">
+        {gameHeader}
 
         {!isCurrentRoom && (
-          <p className="mb-4 rounded-lg bg-red-900/40 px-4 py-3">
+          <p className="mx-auto mt-4 w-full max-w-6xl rounded-lg border border-[#e06c64]/30 bg-[#4b2928] px-4 py-3 text-[#ffc2bc]">
             There is no active connection to this room. Join from the home page.
           </p>
         )}
 
-        <div className="flex flex-1 items-center justify-center">
-          <div className="relative my-4 h-[clamp(300px,65svh,520px)] w-full max-w-4xl sm:my-6">
-            <div className="absolute inset-x-8 inset-y-14 rounded-[3rem] border-[6px] border-emerald-800 bg-green-700 sm:inset-x-16 sm:inset-y-20 sm:rounded-[4rem] sm:border-8 lg:inset-x-20">
+        <div className="flex flex-1 items-center justify-center py-4 sm:py-6">
+          <div className="relative h-[clamp(320px,70svh,560px)] w-full max-w-4xl">
+            <div className="game-table absolute inset-x-8 inset-y-14 rounded-[3rem] sm:inset-x-16 sm:inset-y-20 sm:rounded-[4rem] lg:inset-x-20">
               <div className="flex h-full flex-col items-center justify-center gap-6">
-                <div className="whitespace-nowrap text-3xl sm:text-4xl lg:text-5xl">
-                  ♠ <span className="text-red-300">♥</span> ♣{" "}
-                  <span className="text-red-300">♦</span>
+                <div className="text-center">
+                  <div className="whitespace-nowrap text-3xl font-black tracking-[0.18em] text-white/90 sm:text-4xl lg:text-5xl">
+                    ♠ <span className="text-[#f09a94]">♥</span> ♣ <span className="text-[#f09a94]">♦</span>
+                  </div>
+                  <p className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-white/55">Invite your partners</p>
                 </div>
                 {startControls}
               </div>
@@ -405,68 +421,45 @@ export default function Page({
 
   if (phase === "playing" || phase === "finished") {
     return (
-      <main className="flex min-h-svh flex-col bg-green-600 px-3 py-3 text-white sm:px-5 sm:py-4 lg:px-8">
-        <details className="mx-auto mb-2 w-full max-w-4xl rounded-md bg-black/15 px-3 py-2 text-xs sm:text-sm">
-          <summary className="cursor-pointer">dev log</summary>
-          <p>time to play!</p>
-          <p>phase: {phase}</p>
-          <p>playing state: {playingState}</p>
-          <p>dealer seat: {dealerSeat}</p>
-          <p>turn seat: {turnSeat}</p>
-          <p>round num: {roundNum}</p>
-          <p>blue score: {blueScore}</p>
-          <p>red score: {redScore}</p>
-          <p>trump: {trump}</p>
-          <p>up card: {upCard ? upCard.toString() : "No card"}</p>
-          <p>maker team: {makerTeam}</p>
-          <p>trump caller seat: {trumpCallerSeat}</p>
-          <p>going alone: {goingAlone}</p>
-          <p>alone seat: {aloneSeat}</p>
-          <p>
-            {trick.map((card, index) => (
-              <span key={index}>{card.toString()}</span>
-            ))}
-          </p>
-          <p>{blueTricks}</p>
-          <p>{redTricks}</p>
-          <p>{messageHistory}</p>
-        </details>
+      <main className="app-shell flex min-h-svh flex-col px-3 py-3 text-white sm:px-5 sm:py-4 lg:px-8">
+        {gameHeader}
         {roundNum > 0 && (
-          <section className="mx-auto mb-3 px-4 py-2 text-green-950 sm:px-5 sm:py-3 flex flex-col w-full justify-center items-center">
-            <div className="flex flex-col gap-3">
-              { trump != null && ( <>
-                <p  className="text-xl font-bold text-white">
-                  <span>Trump</span> is 
-                  <span className={(trump === "diamonds" || trump === "hearts") ? "text-red-500" : "text-black"}> {trump}</span>
-                </p>
-              <p  className={"text-xl font-bold text-white"}>
-                <span className={makerTeam == "red" ? "text-red-500" : "text-blue-500" + "text-xl"}>{makerTeam}</span> team ordered up</p>
-              </>)}
+          <section className="surface-panel mx-auto mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3 sm:px-5">
+            <div className="min-w-28">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9d9b98]">Hand {roundNum}</p>
+              <p className="mt-0.5 font-bold text-white">
+                {trump ? <>Trump <span className={trump === "diamonds" || trump === "hearts" ? "text-[#f09a94]" : "text-[#d8d7d5]"}>{suitLabels[trump]}</span></> : "Calling trump"}
+              </p>
             </div>
-            <div className="flex items-center gap-x-3 gap-y-1 text-center tabular-nums sm:gap-x-4">
-              <span className="text-left text-xs text-white">Tricks</span>
-              <span className="text-xl font-bold text-blue-600">{blueTricks}</span>
-              <span className="text-white">–</span>
-              <span className="text-xl font-bold text-red-600">{redTricks}</span>
-              <span className="text-left text-xs text-white">Game</span>
-              <span className="text-xl font-bold text-blue-600 sm:text-xl">{blueScore}</span>
-              <span className="text-white">–</span>
-              <span className="text-xl font-bold text-red-600 sm:text-xl">{redScore}</span>
+            <div className="flex items-center gap-5 text-center tabular-nums sm:gap-7">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#71a7d8]">Blue</p>
+                <p className="text-2xl font-black text-white">{blueScore}</p>
+              </div>
+              <div className="text-[#777471]">
+                <p className="text-[9px] font-bold uppercase tracking-wider">Tricks</p>
+                <p className="text-sm font-bold text-[#d8d7d5]">{blueTricks}–{redTricks}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#df756e]">Red</p>
+                <p className="text-2xl font-black text-white">{redScore}</p>
+              </div>
             </div>
+            <p className="hidden min-w-28 text-right text-xs font-semibold text-[#b7b5b2] sm:block">{makerTeam ? `${makerTeam[0].toUpperCase()}${makerTeam.slice(1)} called it` : "First to 10"}</p>
           </section>
         )}
         {isCollectingTrick && (
-          <p className="mx-auto mb-3 w-full max-w-lg break-words text-center text-sm sm:text-base">{lastTrickWinner?.name} won the trick.</p>
+          <p className="mx-auto mt-3 w-full max-w-lg break-words text-center text-sm font-semibold text-[#b9dd86] sm:text-base">{lastTrickWinner?.name} won the trick.</p>
         )}
         {isPlayingCards && (
-          <div className="mx-auto mb-3 w-full max-w-lg break-words text-center text-sm sm:text-base">
+          <div className="mx-auto mt-3 w-full max-w-lg break-words text-center text-sm text-[#d8d7d5] sm:text-base">
             <p>
               {sittingOut ? "Your partner is playing alone."
                 : isMyTurn ? "Your turn. Choose a card to play."
                   : `Waiting for ${turnPlayer?.name ?? "the next player"} to play.`}
             </p>
-            {actionPending && <p className="text-sm">Sending...</p>}
-            {status !== "connected" && <p className="text-sm">Waiting for connection...</p>}
+            {actionPending && <p className="text-sm">Sending…</p>}
+            {status !== "connected" && <p className="text-sm text-[#f0c95a]">Reconnecting…</p>}
             {(actionError || lastMessage?.type === "error") && (
               <p className="text-sm text-red-200">{actionError ?? lastMessage?.message}</p>
             )}
@@ -486,9 +479,9 @@ export default function Page({
           </section>
         )}
   
-        <div className="flex flex-1 items-center justify-center">
-          <div className="relative grid w-full max-w-4xl grid-rows-[var(--table-height)_auto] gap-y-3 [--table-height:clamp(280px,42svh,360px)] sm:gap-y-4 sm:[--table-height:clamp(320px,44svh,440px)] lg:[--table-height:clamp(320px,46svh,480px)]">
-            <div className="absolute inset-x-7 top-14 h-[calc(var(--table-height)-4.5rem)] rounded-[3rem] border-[6px] border-emerald-800 bg-green-700 sm:inset-x-14 sm:top-16 sm:h-[calc(var(--table-height)-5rem)] sm:rounded-[4rem] sm:border-8 lg:inset-x-20">
+        <div className="flex flex-1 items-center justify-center py-3">
+          <div className="relative grid w-full max-w-4xl grid-rows-[var(--table-height)_auto] gap-y-3 [--table-height:clamp(300px,44svh,380px)] sm:gap-y-4 sm:[--table-height:clamp(340px,46svh,460px)] lg:[--table-height:clamp(360px,48svh,500px)]">
+            <div className="game-table absolute inset-x-7 top-14 h-[calc(var(--table-height)-4.5rem)] rounded-[3rem] sm:inset-x-14 sm:top-16 sm:h-[calc(var(--table-height)-5rem)] sm:rounded-[4rem] lg:inset-x-20">
               <div className="flex h-full flex-col items-center justify-center gap-6">
                 {(isPlayingCards || isCollectingTrick || phase === "finished") && displayedTrick.length > 0 ? (
                   <div
@@ -517,9 +510,9 @@ export default function Page({
                     </p>
                   </div>
                 ) : (
-                  <div className="whitespace-nowrap text-3xl sm:text-4xl lg:text-5xl">
-                    ♠ <span className="text-red-300">♥</span> ♣{" "}
-                    <span className="text-red-300">♦</span>
+                  <div className="whitespace-nowrap text-3xl font-black tracking-[0.16em] text-white/80 sm:text-4xl lg:text-5xl">
+                    ♠ <span className="text-[#f09a94]">♥</span> ♣{" "}
+                    <span className="text-[#f09a94]">♦</span>
                   </div>
                 )}
                 {startControls}
@@ -684,7 +677,7 @@ export default function Page({
             </div>
           </div>
         </div>
-  
+        <GameLog messages={messageHistory} />
       </main>
     );
   }

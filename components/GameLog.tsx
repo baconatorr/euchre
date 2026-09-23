@@ -5,10 +5,10 @@ export default function GameLog({ messages }: { messages: string[] }) {
 
   return (
     <details
-      className="mx-auto mt-3 w-full max-w-4xl rounded-lg bg-black/15 text-xs text-white sm:text-sm"
+      className="surface-panel mx-auto mt-2 w-full max-w-4xl rounded-lg text-xs text-[#d8d7d5] sm:text-sm"
     >
-      <summary className="cursor-pointer px-3 py-2 font-medium">Game log</summary>
-      <div className="max-h-32 space-y-1 overflow-y-auto break-words px-3 pb-3 sm:max-h-48">
+      <summary className="px-3 py-2 font-semibold text-[#b7b5b2]">Game history</summary>
+      <div className="max-h-32 space-y-1 overflow-y-auto break-words border-t border-white/8 px-3 py-3 sm:max-h-48">
         {messages.map((message, index) => (
           <p key={`${index}-${message}`}>{message}</p>
         ))}
