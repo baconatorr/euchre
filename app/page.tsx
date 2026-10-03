@@ -57,10 +57,7 @@ export default function Home() {
             <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#81b64c] text-xl font-black text-white shadow-[0_3px_0_#5d8735]">
               E
             </div>
-            <div>
-              <p className="font-henny-penny text-2xl leading-none text-white">Euchre</p>
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#9d9b98]">Private tables</p>
-            </div>
+            <p className="font-henny-penny text-2xl leading-none text-white">Euchre</p>
           </div>
           <div className="hidden items-center gap-2 text-sm text-[#b7b5b2] sm:flex">
             <span className="h-2 w-2 rounded-full bg-[#81b64c] shadow-[0_0_10px_rgba(129,182,76,.7)]" />
@@ -110,8 +107,7 @@ export default function Home() {
 
           <section className="surface-panel mx-auto w-full max-w-md rounded-2xl p-5 sm:p-7" aria-labelledby="seat-heading">
             <div className="mb-6">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#81b64c]">Play with friends</p>
-              <h2 id="seat-heading" className="mt-2 text-3xl font-bold tracking-tight text-white">Take a seat</h2>
+              <h2 id="seat-heading" className="text-3xl font-bold tracking-tight text-white">Take a seat</h2>
               <p className="mt-1 text-sm text-[#9d9b98]">Choose a table name your friends will recognize.</p>
             </div>
 
@@ -127,7 +123,7 @@ export default function Home() {
                 Create a private table
               </button>
 
-              <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#777471]">
+              <div className="flex items-center gap-3 text-xs font-semibold text-[#777471]">
                 <span className="h-px flex-1 bg-white/8" />
                 or join one
                 <span className="h-px flex-1 bg-white/8" />

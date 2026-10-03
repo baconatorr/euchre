@@ -39,7 +39,7 @@ export default function PlayerIcon({
       </div>
       <div className="mt-1.5 flex max-w-28 items-center gap-1 rounded-md border border-white/8 bg-[#312e2b]/95 px-2 py-1 shadow-lg">
         <span className="truncate text-[10px] font-bold text-[#f1f1ef] sm:text-xs">{name}</span>
-        {isCurrent && <span className="text-[8px] font-black uppercase tracking-wider text-[#81b64c]">You</span>}
+        {isCurrent && <span className="text-[9px] font-bold text-[#81b64c]">You</span>}
       </div>
     </div>
   );

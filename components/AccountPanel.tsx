@@ -59,7 +59,7 @@ export default function AccountPanel() {
           {[["Games", stats?.games ?? "—"], ["Wins", stats?.wins ?? "—"], ["Losses", stats?.losses ?? "—"]].map(([label, value]) => (
             <div key={label} className="rounded-lg bg-[#312f2c] px-2 py-2">
               <p className="text-lg font-black text-white">{value}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#777471]">{label}</p>
+              <p className="text-xs font-semibold text-[#777471]">{label}</p>
             </div>
           ))}
         </div>

@@ -165,10 +165,7 @@ export default function Page({
         <Link href="/" aria-label="Back to home" className="grid h-9 w-9 place-items-center rounded-lg bg-[#81b64c] font-black text-white shadow-[0_3px_0_#5d8735] hover:bg-[#8fc357]">
           E
         </Link>
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9d9b98]">Private table</p>
-          <h1 className="text-lg font-extrabold tracking-wide text-white sm:text-xl">Room {roomCode}</h1>
-        </div>
+        <h1 className="text-lg font-extrabold tracking-wide text-white sm:text-xl">Room {roomCode}</h1>
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-white/8 bg-[#312e2b] px-3 py-2 text-xs font-semibold text-[#d8d7d5]">
         <span className={`h-2 w-2 rounded-full ${isCurrentRoom && status === "connected" ? "bg-[#81b64c] shadow-[0_0_8px_rgba(129,182,76,.75)]" : "bg-[#e06c64]"}`} />
@@ -212,8 +209,8 @@ export default function Page({
                   : "border-white/12 bg-[#312e2b]/85 hover:border-white/30 hover:bg-[#3b3835]"
               }`}
             >
-              <span className={`text-xs font-black uppercase tracking-[0.14em] ${isBlue ? "text-[#9bc8ee]" : "text-[#f3aaa5]"}`}>
-                {team} team · {teamPlayers.length}/2
+              <span className={`text-sm font-bold ${isBlue ? "text-[#9bc8ee]" : "text-[#f3aaa5]"}`}>
+                {isBlue ? "Blue" : "Red"} team · {teamPlayers.length}/2
               </span>
               <span className="mt-1 block min-h-8 text-xs leading-4 text-[#d8d7d5]">
                 {teamPlayers.map((player) => player.name).join(", ") || "Choose this team"}
@@ -397,7 +394,7 @@ export default function Page({
                   <div className="whitespace-nowrap text-3xl font-black tracking-[0.18em] text-white/90 sm:text-4xl lg:text-5xl">
                     ♠ <span className="text-[#f09a94]">♥</span> ♣ <span className="text-[#f09a94]">♦</span>
                   </div>
-                  <p className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-white/55">Invite your partners</p>
+                  <p className="mt-3 text-sm font-medium text-white/55">Invite your partners</p>
                 </div>
                 {startControls}
               </div>
@@ -481,22 +478,21 @@ export default function Page({
         {roundNum > 0 && (
           <section className="surface-panel mx-auto mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3 sm:px-5">
             <div className="min-w-28">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9d9b98]">Hand {roundNum}</p>
-              <p className="mt-0.5 font-bold text-white">
-                {trump ? <>Trump <span className={trump === "diamonds" || trump === "hearts" ? "text-[#f09a94]" : "text-[#d8d7d5]"}>{suitLabels[trump]}</span></> : "Calling trump"}
+              <p className="font-bold text-white">
+                Hand {roundNum} · {trump ? <>Trump <span className={trump === "diamonds" || trump === "hearts" ? "text-[#f09a94]" : "text-[#d8d7d5]"}>{suitLabels[trump]}</span></> : "Calling trump"}
               </p>
             </div>
             <div className="flex items-center gap-5 text-center tabular-nums sm:gap-7">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#71a7d8]">Blue</p>
+                <p className="text-xs font-semibold text-[#71a7d8]">Blue</p>
                 <p className="text-2xl font-black text-white">{blueScore}</p>
               </div>
               <div className="text-[#777471]">
-                <p className="text-[9px] font-bold uppercase tracking-wider">Tricks</p>
+                <p className="text-xs font-semibold">Tricks</p>
                 <p className="text-sm font-bold text-[#d8d7d5]">{blueTricks}–{redTricks}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#df756e]">Red</p>
+                <p className="text-xs font-semibold text-[#df756e]">Red</p>
                 <p className="text-2xl font-black text-white">{redScore}</p>
               </div>
             </div>
