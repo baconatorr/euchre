@@ -12,6 +12,7 @@ import type {
   GamePlayer,
   GameSocketMessage,
   GameState,
+  Team,
 } from "../lib/gameSocket";
 
 const PLAYER_ID_PATTERN =
@@ -19,9 +20,64 @@ const PLAYER_ID_PATTERN =
 
 interface Env {
   Main: DurableObjectNamespace<Main>;
+  APPWRITE_ENDPOINT?: string;
+  APPWRITE_PROJECT_ID?: string;
+  STATS_API_URL?: string;
+  STATS_API_SECRET?: string;
 }
 
+type AppwriteAccount = { $id: string; name: string; email: string };
+
 export class Main extends Server<Env> {
+
+  async authenticate(token: string | null): Promise<AppwriteAccount | null> {
+    const { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID } = this.env;
+
+    // Local PartyKit development can still run without Appwrite. Deployed
+    // environments should always configure both values.
+    if (!APPWRITE_ENDPOINT || !APPWRITE_PROJECT_ID) return null;
+    if (!token) throw new Error("Sign in is required");
+
+    const response = await fetch(`${APPWRITE_ENDPOINT.replace(/\/$/, "")}/account`, {
+      headers: {
+        "X-Appwrite-Project": APPWRITE_PROJECT_ID,
+        "X-Appwrite-JWT": token,
+      },
+    });
+
+    if (!response.ok) throw new Error("Your sign-in expired. Please sign in again");
+    return response.json<AppwriteAccount>();
+  }
+
+  async recordStats(game: GameState) {
+    if (!this.env.STATS_API_URL || !this.env.STATS_API_SECRET || !game.matchId) return;
+
+    const players = game.players
+      .filter((player) => player.accountId)
+      .map((player) => ({
+        userId: player.accountId!,
+        team: player.team,
+      }));
+
+    if (players.length === 0) return;
+
+    const response = await fetch(this.env.STATS_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.env.STATS_API_SECRET}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        matchId: game.matchId,
+        roomCode: game.roomCode ?? "unknown",
+        blueScore: game.blueScore,
+        redScore: game.redScore,
+        players,
+      }),
+    });
+
+    if (!response.ok) throw new Error(`Stats API returned ${response.status}`);
+  }
 
   sendMessage(
     conn: Connection,
@@ -38,6 +94,7 @@ export class Main extends Server<Env> {
             hand: player.connId === conn.id ? player.hand : [],
             handCount: player.hand.length,
             uid: player.connId === conn.id ? player.uid : `seat-${player.seat}`,
+            accountId: player.connId === conn.id ? player.accountId : undefined,
             connId: player.connId === conn.id ? player.connId : "",
           })),
         },
@@ -75,8 +132,23 @@ export class Main extends Server<Env> {
     const name = url.searchParams.get("name") ?? "Player"
     const mode = url.searchParams.get("mode");
     const playerId = url.searchParams.get("playerId");
+    const authToken = url.searchParams.get("authToken");
 
     let game = await this.ctx.storage.get<GameState>("game");
+
+    let account: AppwriteAccount | null;
+    try {
+      account = await this.authenticate(authToken);
+    } catch (error) {
+      this.sendMessage(conn, {
+        type: "error",
+        message: error instanceof Error ? error.message : "Could not verify account",
+      });
+      conn.close();
+      return;
+    }
+
+    const verifiedName = account?.name?.trim() || name;
 
     if (mode !== "create" && mode !== "join") {
       this.sendMessage(
@@ -107,12 +179,13 @@ export class Main extends Server<Env> {
     }
 
     const existingPlayer = game?.players.find(
-      (player) => player.uid === playerId,
+      (player) => account ? player.accountId === account.$id : player.uid === playerId,
     );
 
     if (game && existingPlayer) {
       existingPlayer.connId = conn.id;
-      existingPlayer.name = name;
+      existingPlayer.name = verifiedName;
+      existingPlayer.accountId = account?.$id;
 
       game.messageHistory.push(
         `${existingPlayer.name} reconnected`,
@@ -155,6 +228,9 @@ export class Main extends Server<Env> {
         return;
       }
       game = {
+        roomCode: url.pathname.split("/").filter(Boolean).at(-1)?.toUpperCase(),
+        matchId: null,
+        statsRecorded: false,
         players: [],
         phase: "lobby",
         playingState: "selecting dealer",
@@ -219,21 +295,19 @@ export class Main extends Server<Env> {
     const player: GamePlayer = {
       connId: conn.id,
       uid: playerId,
-      name,
+      name: verifiedName,
+      accountId: account?.$id,
       seat: game.players.length as GamePlayer["seat"],
       team: game.players.length % 2 === 0 ? "blue" : "red",
       hand: [],
     };    
   
     game.players.push(player);
-    if(game.players.length == 4){
-      game.phase = "playing"
-    }
   
     const historyMessage =
     mode === "create"
-      ? `${name} created the room`
-      : `${name} joined the room`;
+      ? `${verifiedName} created the room`
+      : `${verifiedName} joined the room`;
 
   game.messageHistory.push(historyMessage);
 
@@ -325,8 +399,44 @@ export class Main extends Server<Env> {
           game.trump && card.rank === "J" && card.suit === sameColor[game.trump]
             ? game.trump : card.suit;
 
+        if (action.type === "choose_team") {
+          if (game.phase !== "lobby" || game.roundNum !== 0) {
+            throw new Error("Teams can only be changed before the game starts");
+          }
+          if (action.team !== "blue" && action.team !== "red") {
+            throw new Error("Invalid team selection");
+          }
+
+          player.team = action.team as Team;
+          game.messageHistory.push(`${player.name} joined the ${player.team} team`);
+        }
+
         if (action.type === "start_game") {
+          if (game.phase !== "lobby" || game.roundNum !== 0) {
+            throw new Error("The game has already started");
+          }
+          if (player !== game.players[0]) {
+            throw new Error("Only the host can start the game");
+          }
+          if (game.players.length !== 4) {
+            throw new Error("Four players are required to start");
+          }
+
+          const bluePlayers = game.players.filter(player => player.team === "blue");
+          const redPlayers = game.players.filter(player => player.team === "red");
+          if (bluePlayers.length !== 2 || redPlayers.length !== 2) {
+            throw new Error("Each team needs exactly two players");
+          }
+
+          bluePlayers.forEach((player, index) => {
+            player.seat = (index * 2) as GamePlayer["seat"];
+          });
+          redPlayers.forEach((player, index) => {
+            player.seat = (index * 2 + 1) as GamePlayer["seat"];
+          });
           game.roundNum = 0;
+          game.matchId = crypto.randomUUID();
+          game.statsRecorded = false;
           game.lastHandResult = null;
           game.blueScore = 0;
           game.redScore = 0;
@@ -394,6 +504,8 @@ export class Main extends Server<Env> {
         }
 
         if (action.type === "restart_game") {
+          game.matchId = crypto.randomUUID();
+          game.statsRecorded = false;
           game.lastHandResult = null;
           game.blueScore = 0;
           game.redScore = 0;
@@ -493,7 +605,18 @@ export class Main extends Server<Env> {
           await storage.put("game", current);
           return current;
         });
-        if (nextGame) await this.broadcastMessage(sender, true, { type: "state", game: nextGame }, false);
+        if (nextGame) {
+          if (nextGame.phase === "finished" && !nextGame.statsRecorded) {
+            try {
+              await this.recordStats(nextGame);
+              nextGame.statsRecorded = true;
+              await this.ctx.storage.put("game", nextGame);
+            } catch (error) {
+              console.error("Could not record match stats", error);
+            }
+          }
+          await this.broadcastMessage(sender, true, { type: "state", game: nextGame }, false);
+        }
       }
     } catch (error) {
       const game = await this.ctx.storage.get<GameState>("game");

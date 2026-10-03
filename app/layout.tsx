@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Henny_Penny, Outfit } from "next/font/google";
 import { GameSocketProvider } from "@/context/GameSocketContext";
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
 const hennyPenny = Henny_Penny({
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${hennyPenny.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <GameSocketProvider>{children}</GameSocketProvider>
+        <AuthProvider>
+          <GameSocketProvider>{children}</GameSocketProvider>
+        </AuthProvider>
       </body>
     </html>
   );

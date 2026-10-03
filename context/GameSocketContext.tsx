@@ -17,6 +17,7 @@ import {
   parseGameSocketMessage,
   type GameSocketMessage,
   type Suit,
+  type Team,
 } from "@/lib/gameSocket";
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected";
@@ -28,6 +29,7 @@ type GameSocketContextValue = {
   createGame: (playerName: string) => Promise<string>;
   joinGame: (roomCode: string, playerName: string) => Promise<string>;
   send: (message: GameSocketMessage) => void;
+  chooseTeam: (team: Team) => void;
   startGame: () => void;
   orderUp: (goingAlone?: boolean) => void;
   pass: () => void;
@@ -117,8 +119,8 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
   );
 
   const createGame = useCallback(
-    (playerName: string) => {
-      const { roomCode: code, socket } = openCreatedRoom(playerName);
+    async (playerName: string) => {
+      const { roomCode: code, socket } = await openCreatedRoom(playerName);
   
       if (!socket) {
         return Promise.reject(new Error("Could not create socket"));
@@ -132,12 +134,12 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
   );
 
   const joinGame = useCallback(
-    (code: string, playerName: string) => {
+    async (code: string, playerName: string) => {
       const normalizedCode = code.trim().toUpperCase();
   
       sessionStorage.setItem("playerName", playerName);
   
-      const socket = openJoinedRoom(normalizedCode, playerName);
+      const socket = await openJoinedRoom(normalizedCode, playerName);
   
       if (!socket) {
         return Promise.reject(new Error("Could not create socket"));
@@ -164,6 +166,13 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
   const startGame = useCallback(() => {
     send({ type: "start_game" });
   }, [send]);
+
+  const chooseTeam = useCallback(
+    (team: Team) => {
+      send({ type: "choose_team", team });
+    },
+    [send],
+  );
 
   const orderUp = useCallback(
     (goingAlone = false) => {
@@ -223,6 +232,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
         createGame,
         joinGame,
         send,
+        chooseTeam,
         startGame,
         orderUp,
         pass,

@@ -1,8 +1,10 @@
 import React from "react";
+import type { Team } from "@/lib/gameSocket";
 
 interface PlayerIconProps {
   name: string;
   seat: number;
+  team?: Team;
   isDealer?: boolean;
   isActive?: boolean;
   isCurrent?: boolean;
@@ -11,11 +13,12 @@ interface PlayerIconProps {
 export default function PlayerIcon({
   name,
   seat,
+  team,
   isDealer = false,
   isActive = false,
   isCurrent = false,
 }: PlayerIconProps) {
-  const teamColor = seat % 2 === 0
+  const teamColor = (team ?? (seat % 2 === 0 ? "blue" : "red")) === "blue"
     ? "border-[#71a7d8]"
     : "border-[#df756e]";
 

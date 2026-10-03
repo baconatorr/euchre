@@ -1,40 +1,29 @@
 "use client";
 
 import { useGameSocket } from "@/context/GameSocketContext";
+import { useAuth } from "@/context/AuthContext";
+import AccountPanel from "@/components/AccountPanel";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Home() {
   const router = useRouter();
   const { createGame, joinGame } = useGameSocket();
+  const { user } = useAuth();
+  const playerName = user?.name.trim() || user?.email.split("@")[0] || "";
 
-  const [name, setName] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  function checkUsername() {
-    const profanitySet = new Set<string>([]);
-
-    if (name.trim().length < 3) {
-      return false;
-    }
-
-    if (profanitySet.has(name.toLowerCase())) {
-      setName("i tried to make my name a bad word but it didnt work");
-    }
-
-    return true;
-  }
-
   const joinSubmit = async () => {
-    if (!checkUsername()) {
-      setError("Username must be at least 3 characters.");
+    if (!user) {
+      setError("Sign in before joining a table.");
       return;
     }
 
     try {
       setError(null);
-      const roomCode = await joinGame(joinCode, name);
+      const roomCode = await joinGame(joinCode, playerName);
       router.push(`/game/${roomCode}`);
     } catch (error) {
       setError(
@@ -44,14 +33,14 @@ export default function Home() {
   };
 
   const createSubmit = async () => {
-    if (!checkUsername()) {
-      setError("Username must be at least 3 characters.");
+    if (!user) {
+      setError("Sign in before creating a table.");
       return;
     }
 
     try {
       setError(null);
-      const roomCode = await createGame(name);
+      const roomCode = await createGame(playerName);
       router.push(`/game/${roomCode}`);
     } catch (error) {
       setError(
@@ -75,7 +64,7 @@ export default function Home() {
           </div>
           <div className="hidden items-center gap-2 text-sm text-[#b7b5b2] sm:flex">
             <span className="h-2 w-2 rounded-full bg-[#81b64c] shadow-[0_0_10px_rgba(129,182,76,.7)]" />
-            No account needed
+            {user ? `Signed in as ${playerName}` : "Account required"}
           </div>
         </header>
 
@@ -127,22 +116,13 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col gap-5">
-              <label className="flex flex-col gap-2 text-sm font-semibold text-[#d8d7d5]">
-                Your name
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Enter at least 3 characters"
-                  autoComplete="nickname"
-                  className="min-h-13 w-full rounded-lg border border-white/10 bg-[#262522] px-4 text-base text-white shadow-inner outline-none placeholder:text-[#777471] focus:border-[#81b64c]"
-                />
-              </label>
+              <AccountPanel />
 
               <button
                 type="button"
                 onClick={createSubmit}
-                className="primary-action min-h-13 rounded-lg px-5 text-base font-extrabold"
+                disabled={!user}
+                className="primary-action min-h-13 rounded-lg px-5 text-base font-extrabold disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Create a private table
               </button>
@@ -169,7 +149,8 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={joinSubmit}
-                  className="min-h-13 self-end rounded-lg border border-white/10 bg-[#454341] px-5 font-bold text-white shadow-[0_3px_0_#242321] hover:bg-[#504e4b]"
+                  disabled={!user || joinCode.trim().length !== 5}
+                  className="min-h-13 self-end rounded-lg border border-white/10 bg-[#454341] px-5 font-bold text-white shadow-[0_3px_0_#242321] hover:bg-[#504e4b] disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   Join table
                 </button>

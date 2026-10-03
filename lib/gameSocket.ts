@@ -1,9 +1,11 @@
 import PartySocket from "partysocket";
+import { createAppwriteJWT } from "@/lib/appwrite";
 
 export type GamePlayer = {
   connId: string;
   uid: string;
   name: string;
+  accountId?: string;
 
   seat: 0 | 1 | 2 | 3;
   team: Team;
@@ -15,6 +17,9 @@ export type GamePlayer = {
 export type Team = "blue" | "red";
 
 export type GameState = {
+  matchId?: string | null;
+  roomCode?: string;
+  statsRecorded?: boolean;
   players: GamePlayer[];
 
   phase: "lobby" | "playing" | "finished";
@@ -147,9 +152,10 @@ export function parseGameSocketMessage(data: unknown): GameSocketMessage {
   return { type: "message", message: text };
 }
 
-export function connectToGame(roomCode: string, playerName: string, mode="join"){
+export async function connectToGame(roomCode: string, playerName: string, mode="join"){
   try { 
     const playerId = getOrCreatePlayerId();
+    const authToken = await createAppwriteJWT();
     const socket = new PartySocket({
       host: PARTYKIT_HOST,
     room: roomCode.toUpperCase(),
@@ -157,6 +163,7 @@ export function connectToGame(roomCode: string, playerName: string, mode="join")
       name: playerName,
       mode: mode,
       playerId,
+      authToken,
     }
   })
 
@@ -172,15 +179,15 @@ export function connectToGame(roomCode: string, playerName: string, mode="join")
 
 }
 
-export function createRoom(playerName: string){
+export async function createRoom(playerName: string){
   const roomCode = generateRoomCode();
-  const socket = connectToGame(roomCode, playerName, "create");
+  const socket = await connectToGame(roomCode, playerName, "create");
 
   return {roomCode, socket};
 }
 
-export function joinRoom(roomCode: string, playerName: string){
-  const socket = connectToGame(
+export async function joinRoom(roomCode: string, playerName: string){
+  const socket = await connectToGame(
     roomCode.trim().toUpperCase(),
     playerName
   );

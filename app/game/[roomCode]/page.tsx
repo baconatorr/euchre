@@ -1,6 +1,7 @@
 "use client";
 
 import { useGameSocket } from "@/context/GameSocketContext";
+import { useAuth } from "@/context/AuthContext";
 import type { Card, GameState, Suit } from "@/lib/gameSocket";
 import GameLog from "@/components/GameLog";
 import Link from "next/link";
@@ -75,12 +76,14 @@ export default function Page({
   params: Promise<{ roomCode: string }>;
 }) {
   const { roomCode } = use(params);
+  const { refreshStats } = useAuth();
 
   const {
     roomCode: connectedRoomCode,
     status,
     lastMessage,
     joinGame,
+    chooseTeam,
     startGame,
     orderUp,
     pass,
@@ -140,11 +143,21 @@ export default function Page({
     ? players.find((player) => Boolean(player.connId))
     : undefined;
 
+  useEffect(() => {
+    if (phase === "finished") {
+      void refreshStats().catch(() => undefined);
+    }
+  }, [phase, refreshStats]);
+
   const getDisplaySeat = (seat: number) =>
     currentPlayer ? (seat - currentPlayer.seat + 6) % 4 : seat;
 
+  const bluePlayers = players.filter((player) => player.team === "blue");
+  const redPlayers = players.filter((player) => player.team === "red");
+  const teamsAreReady = bluePlayers.length === 2 && redPlayers.length === 2;
+  const isHost = Boolean(currentPlayer && currentPlayer.uid === players[0]?.uid);
   const isStarting = startRequest !== null && startRequest.message === lastMessage;
-  const canStart = currentPlayer?.seat === 0 && players.length === 4 && status === "connected";
+  const canStart = isHost && players.length === 4 && teamsAreReady && status === "connected";
 
   const gameHeader = (
     <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-3 sm:pb-4">
@@ -177,23 +190,61 @@ export default function Page({
   };
 
   const startControls = roundNum === 0 && playingState === "selecting dealer" ? (
-    <div className="flex max-w-sm flex-col items-center gap-3 px-4 text-center">
+    <div className="flex w-full max-w-md flex-col items-center gap-3 px-4 text-center">
+      <div className="grid w-full grid-cols-2 gap-3">
+        {(["blue", "red"] as const).map((team) => {
+          const teamPlayers = team === "blue" ? bluePlayers : redPlayers;
+          const isSelected = currentPlayer?.team === team;
+          const isBlue = team === "blue";
+
+          return (
+            <button
+              key={team}
+              type="button"
+              onClick={() => chooseTeam(team)}
+              disabled={status !== "connected" || isSelected || isStarting}
+              aria-pressed={isSelected}
+              className={`rounded-xl border px-3 py-3 text-left transition disabled:cursor-default ${
+                isSelected
+                  ? isBlue
+                    ? "border-[#71a7d8] bg-[#31506d] ring-2 ring-[#71a7d8]/35"
+                    : "border-[#df756e] bg-[#693b38] ring-2 ring-[#df756e]/35"
+                  : "border-white/12 bg-[#312e2b]/85 hover:border-white/30 hover:bg-[#3b3835]"
+              }`}
+            >
+              <span className={`text-xs font-black uppercase tracking-[0.14em] ${isBlue ? "text-[#9bc8ee]" : "text-[#f3aaa5]"}`}>
+                {team} team · {teamPlayers.length}/2
+              </span>
+              <span className="mt-1 block min-h-8 text-xs leading-4 text-[#d8d7d5]">
+                {teamPlayers.map((player) => player.name).join(", ") || "Choose this team"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
       {players.length < 4 ? (
         <>
           <p className="text-lg font-bold text-white">Waiting for the table</p>
           <p className="text-sm text-[#d4dfcf]">{players.length} of 4 players have joined</p>
         </>
-      ) : currentPlayer?.seat === 0 ? (
-        <button
-          type="button"
-          onClick={handleStartGame}
-          disabled={!canStart || isStarting}
-          className="primary-action min-h-12 rounded-lg px-7 py-3 font-extrabold disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isStarting ? "Starting…" : "Start game"}
-        </button>
+      ) : isHost ? (
+        <>
+          <button
+            type="button"
+            onClick={handleStartGame}
+            disabled={!canStart || isStarting}
+            className="primary-action min-h-12 rounded-lg px-7 py-3 font-extrabold disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isStarting ? "Starting…" : "Start game"}
+          </button>
+          {!teamsAreReady && (
+            <p className="text-sm text-[#f0c95a]">Each team needs exactly two players.</p>
+          )}
+        </>
       ) : (
-        <p className="text-sm text-[#d4dfcf]">The table is full. Waiting for the host to deal.</p>
+        <p className="text-sm text-[#d4dfcf]">
+          {teamsAreReady ? "Teams are set. Waiting for the host to deal." : "Choose teams with two players on each side."}
+        </p>
       )}
       {status !== "connected" && <p className="text-sm text-[#f0c95a]">Reconnecting…</p>}
       {(startError || lastMessage?.type === "error") && (
@@ -360,6 +411,7 @@ export default function Page({
                     key={player.uid}
                     name={player.name}
                     seat={player.seat}
+                    team={player.team}
                     isDealer={roundNum > 0 && player.seat === dealerSeat}
                     isActive={roundNum > 0 && player.seat === turnSeat}
                     isCurrent={player.seat === currentPlayer?.seat}
@@ -375,6 +427,7 @@ export default function Page({
                     key={player.uid}
                     name={player.name}
                     seat={player.seat}
+                    team={player.team}
                     isDealer={roundNum > 0 && player.seat === dealerSeat}
                     isActive={roundNum > 0 && player.seat === turnSeat}
                     isCurrent={player.seat === currentPlayer?.seat}
@@ -390,6 +443,7 @@ export default function Page({
                     key={player.uid}
                     name={player.name}
                     seat={player.seat}
+                    team={player.team}
                     isDealer={roundNum > 0 && player.seat === dealerSeat}
                     isActive={roundNum > 0 && player.seat === turnSeat}
                     isCurrent={player.seat === currentPlayer?.seat}
@@ -405,6 +459,7 @@ export default function Page({
                     key={player.uid}
                     name={player.name}
                     seat={player.seat}
+                    team={player.team}
                     isDealer={roundNum > 0 && player.seat === dealerSeat}
                     isActive={roundNum > 0 && player.seat === turnSeat}
                     isCurrent={player.seat === currentPlayer?.seat}
@@ -468,7 +523,7 @@ export default function Page({
         {phase === "finished" && (
           <section className="mx-auto mb-3 w-full max-w-lg break-words text-center text-sm sm:text-base">
             <h1 className="text-xl font-bold sm:text-2xl">{blueScore >= 10 ? "Blue" : "Red"} wins!</h1>
-            {currentPlayer?.seat === 0 && (
+            {isHost && (
               <button type="button" disabled={status !== "connected" || actionPending}
                 onClick={() => sendGameAction(restartGame)}
                 className="mt-3 rounded-lg bg-white px-4 py-2 font-bold text-green-950 disabled:opacity-50">
@@ -528,6 +583,7 @@ export default function Page({
                       <PlayerIcon
                         name={player.name}
                         seat={player.seat}
+                        team={player.team}
                         isDealer={roundNum > 0 && player.seat === dealerSeat}
                         isActive={player.seat === turnSeat}
                         isCurrent={player.seat === currentPlayer?.seat}
@@ -567,6 +623,7 @@ export default function Page({
                       <PlayerIcon
                         name={player.name}
                         seat={player.seat}
+                        team={player.team}
                         isDealer={roundNum > 0 && player.seat === dealerSeat}
                         isActive={player.seat === turnSeat}
                         isCurrent={player.seat === currentPlayer?.seat}
@@ -607,6 +664,7 @@ export default function Page({
                       <PlayerIcon
                         name={player.name}
                         seat={player.seat}
+                        team={player.team}
                         isDealer={roundNum > 0 && player.seat === dealerSeat}
                         isActive={player.seat === turnSeat}
                         isCurrent={player.seat === currentPlayer?.seat}
@@ -646,6 +704,7 @@ export default function Page({
                       <PlayerIcon
                         name={player.name}
                         seat={player.seat}
+                        team={player.team}
                         isDealer={roundNum > 0 && player.seat === dealerSeat}
                         isActive={player.seat === turnSeat}
                         isCurrent={player.seat === currentPlayer?.seat}
